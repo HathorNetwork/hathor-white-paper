@@ -4,15 +4,22 @@
 \usepackage[square,numbers]{natbib}
 \usepackage{hyperref}
 
-\usepackage{amsmath}
-\usepackage{amsthm}
 \usepackage{amsfonts}
 \usepackage{graphicx}
 \usepackage{subfig}
 
-\newtheorem{theorem}{Theorem}[section]
+\usepackage{amsmath,amssymb}
+\usepackage{amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem*{cor}{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\DeclareMathOperator\erfc{erfc}
+\DeclareMathOperator\erf{erf}
 
-\title{HathorCoin White Paper}
+\usepackage{tikz}
+\usetikzlibrary{matrix, positioning, decorations.pathreplacing}
+
+\title{Hathor}
 \author{Marcelo Salhab Brogliato}
 
 \begin{document}
@@ -20,11 +27,33 @@
 \maketitle
 
 \begin{abstract}
-Hathor is a cryptocurrency proposal which mix a blockchain \citep{nakamoto2008bitcoin} with a tangle \citep{tangle2016}.
+Hathor is a cryptocurrency proposal which underlying technology is mixture of a blockchain \citep{nakamoto2008bitcoin} with a tangle \citep{tangle2016}. Its primary goal is to work under any load---from a few to thousands of transactions per second.
 \end{abstract}
 
-\section{Introduction}
-Hathor white paper...
+\input{Chapter01.tex}
+
+\section{Todo}
+
+%- Architecture.
+%- Mining a block.
+%- New transactions.
+%- Transaction confirmation (Hathor vs Bitcoin vs Iota)
+%- High load scenario.
+%- Low load scenario.
+%- Incentive to miners.
+%- Incentive to propagate a transaction.
+%- Spam
+%- No fee (?)
+%- Fees only to miners (?)
+
+\begin{itemize}
+\item Explain Bitcoin + Blockchain.
+\item Explain Iota + Tangle.
+\item Mobile / IoT devices.
+\item Miners vs IoT devices.
+\item Bandwidth, storage and CPU requirements.
+\end{itemize}
+
 
 \medskip
 
