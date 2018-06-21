@@ -1,13 +1,28 @@
-\documentclass[12pt]{article}
+\RequirePackage{fix-cm} % fix some latex issues see: http://tug.org/texmf-dist/doc/latex/base/fixltx2e.pdf
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[margin=0.8in]{geometry}
 
 \usepackage[utf8]{inputenc}
-\usepackage[square,numbers]{natbib}
-\usepackage{hyperref}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
 
-\usepackage{amsfonts}
+\PassOptionsToPackage{square,numbers,sort&compress}{natbib}
+    \usepackage{natbib}
+
 \usepackage{graphicx}
 \usepackage{subfig}
+\usepackage{color}
+\usepackage{tikz}
+\usetikzlibrary{matrix, positioning, decorations.pathreplacing}
+\usepackage{tabularx}
+\usepackage{xcolor}
 
+\PassOptionsToPackage{hyphens}{url}
+\PassOptionsToPackage{pdftex,hyperfootnotes=false,pdfpagelabels}{hyperref}
+    \usepackage{hyperref} % backref linktocpage pagebackref
+
+\usepackage{tabularx}
 \usepackage{amsmath,amssymb}
 \usepackage{amsthm}
 \newtheorem{theorem}{Theorem}
@@ -16,48 +31,34 @@
 \DeclareMathOperator\erfc{erfc}
 \DeclareMathOperator\erf{erf}
 
-\usepackage{tikz}
-\usetikzlibrary{matrix, positioning, decorations.pathreplacing}
-
-\title{Hathor}
+\title{Hathor: An alternative towards a scalable cryptocurrency}
 \author{Marcelo Salhab Brogliato}
+\date{June 15, 2018}
 
 \begin{document}
 
 \maketitle
 
-\begin{abstract}
-Hathor is a cryptocurrency proposal which underlying technology is mixture of a blockchain \citep{nakamoto2008bitcoin} with a tangle \citep{tangle2016}. Its primary goal is to work under any load---from a few to thousands of transactions per second.
-\end{abstract}
+%\begin{abstract}
+%    Abstract...
+%\end{abstract}
 
-\input{Chapter01.tex}
+\input{Chapters/Chapter01}
 
-\section{Todo}
-
-%- Architecture.
-%- Mining a block.
-%- New transactions.
-%- Transaction confirmation (Hathor vs Bitcoin vs Iota)
-%- High load scenario.
-%- Low load scenario.
-%- Incentive to miners.
-%- Incentive to propagate a transaction.
-%- Spam
-%- No fee (?)
-%- Fees only to miners (?)
-
-\begin{itemize}
-\item Explain Bitcoin + Blockchain.
-\item Explain Iota + Tangle.
-\item Mobile / IoT devices.
-\item Miners vs IoT devices.
-\item Bandwidth, storage and CPU requirements.
-\end{itemize}
+\bibliographystyle{apa}
+\bibliography{mybib01.bib}
 
 
-\medskip
+%\section{Appendix A: Bitcoin \& Blockchain}
+%\input{./Chapters/bitcoin.tex}
 
-\bibliographystyle{plainnat}
-\bibliography{mybib}
+
+%\section{Appendix B: Iota \& Tangle}
+%\input{./Chapters/iota.tex}
+
+
+\section{Appendix: Analysis of Bitcoin}
+\label{ch:hathor-bitcoin-math}
+\input{./Chapters/hathor-bitcoin-math.tex}
 
 \end{document}

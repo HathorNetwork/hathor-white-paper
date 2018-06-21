@@ -1,0 +1,161 @@
+% !TEX root = ../partial-blockchain.tex
+
+This work introduces Hathor's architecture, which lies between Bitcoin's and Iota's and may be a solution to scaling, centralization, and spam issues.
+
+Like Iota, new transactions confirm previous ones, forming a Directed Acyclic Graph (DAG). For this, each transaction has its own proof-of-work which is solved by the issuer before propagating the transactions in the network. Like Bitcoin, miners find new ``blocks'' every 10 minutes in which they collect the fees and newly generated tokens. Each transaction has an ``accumulated weight'' which express the required effort to break the transaction, similar to Bitcoin's number of confirmations.
+
+In Hathor, there are two difficulty levels: (i) one for new transactions which are just moving tokens around, and (ii) another one for ``blocks'' which are generating new tokens and collecting fees. The first may be adjusted to prevent spammers, which would spend too many resources to generate a great number of new transactions, whereas the latter is adjusted every 2,016 blocks to keep the pace of blocks on every 2 minutes.
+
+Both miners and users will be working on proof-of-work, decentralizing even more the network's hash rate. Even though the users' difficulty is less than the miners', the hash rate will increase with every new user. The more transactions arrive, the higher the total hash rate. This may have good consequences in governance, which we will further discuss.
+
+There is a trade-off about the \textit{difficulty} of new transactions. The higher it is, the harder it is to generate new transactions, preventing spammers but also making it harder for IoT devices generate new transactions. This difficulty may even be increased when a spam attack is in course and reduced when it is gone. If the difficulty is too high, IoT devices may sign their transactions and send them to another devices which have a greater hash rate and will solve their proof-of-work faster.
+
+It also seems interesting to have this difficulty depending on new transaction's size (in bytes) and amount being moved. The idea here is to require more work when high amounts are at stake. It would not affect IoT devices, which are expected to usually move smaller amounts. Regarding the transaction's size, requiring more work for larger transactions may make sense because they may prevent abuses, such as a denial-of-service attack using enormous transactions which would consume a lot of node's bandwidth and disk space.
+
+Another important security matter is that each transaction has to confirm all its inputs, i.e., there must be a confirmation path between all the transactions of the inputs and the transaction which are spending them. It is always possible since there is at least one confirmation path between any transaction and a tip. This ensures that, when a conflict is resolved, only the sub-DAG with root at the invalidated transaction will be affected. The remaining parts of the DAG remains the same.
+
+The transactions are classified into three groups: (i) confirmed transactions, (ii) in-progress transactions, and (iii) unconfirmed transactions (tips). The confirmed transactions are the ones which have already been settled, i.e., their accumulated weights have reached a minimum level. The unconfirmed transactions (tips) are the brand new transactions which have not been confirmed even once yet, i.e., their accumulated weights are zero. The in-progress transactions are in the middle. They have already been confirmed a few times, but not enough to reach the minimum level required to be a confirmed transaction. For simplicity, the pending transactions encompass both in-progress and unconfirmed transactions.
+
+Another transaction classification concerns its validation by the network. A transaction is said to be network validated if there are confirming paths from all tips to the transactions, i.e., the whole network has validated that the transaction is valid. It is important to notice that a transaction may be network validated but still pending, or even be confirmed but not network validated.
+
+A \emph{block} is just a regular transaction with no inputs which confirms a previous block and at least two in-progress transactions or tips. There may be any number of outputs provided that they comply with the number of newly generated tokens. Each block collects all fees from all transactions confirmed by it which have not been confirmed by another block before. The blocks are ordered according to their timestamp. If two blocks have the same timestamp, the block hash is used as a tiebreaker.
+
+In the low load scenario, there is a small number of new transactions coming into the network, which means they give a minor contribution to confirmations. In this case, the confirmation is held mostly by blocks. On the other hand, in the high load scenarios, there is a large number of new transactions giving a major contribution to confirmations. In this case, the blocks strengthen the confirmations, but many of them will have already been confirmed before the next blocks are found. The higher the number of new transactions, the faster the transactions are confirmed. The blocks assure a ``maximum confirmation time''.
+
+The incentive scheme which keeps the network running is the same as Bitcoin's. Miners go towards fees and newly generate coins, whereas users just want to exchange their tokens. When there is no new transaction to be confirmed, the miners keep the network up and running while they find new blocks.
+
+
+\subsection{Transaction confirmation}
+
+Hathor uses similar concepts of weight and accumulated weight as Iota's. The weight depends only in the transaction itself, whereas the accumulated weight depends on its confirmations.
+
+The weight of a transaction is calculated as $w = \log_2(k)$ where $k$ is the average number of hashes required to solve its proof-of-work.
+
+The accumulated weight is the average number of hashes required to solve the proof-of-work of the transaction itself plus all the transactions which confirm it. Let $A$ be a transaction, its accumulated weight $w_A$ is calculated as $\log_2(2^{w_A} + \sum_{A \leadsto P} 2^{w_P})$.
+
+In Bitcoin, it is well-known that one should wait at least ``six confirmations'' before accepting a transaction. This Bitcoin's criteria is based on some results presented in Satoshi's seminal work \citep{nakamoto2008bitcoin} and derived here in more detail in Chapter \ref{ch:hathor-bitcoin-math}. Adopting six confirmations is the same as demanding from attackers a minimal effort of six times the network's hash rate to successfully double spend those tokens. Let $H$ be the total hash rate of the network. Then, as $\mathbf{E}(Y_6) = 60 \text{ minutes}$, it will be necessary to calculate, on average, $\mathbf{E}(Y_6) \cdot H = 60 \cdot 60 \cdot H$ hashes to solve the proof-of-work of 6 blocks.
+
+Therefore, in order to have the same level of security as Bitcoin, a transaction is said to be confirmed when its accumulated weight is greater than or equal to $\log_2(\mathbf{E}(Y_6) \cdot H) = \log_2(6 \cdot 128 \cdot H) = 7 + \log_2(6) + \log_2(H)$, where $H$ is calculated as the total hash rate of the miners plus the total hash rate of new transactions.
+
+
+\subsection{Time between blocks}
+
+The hash function used for the proof-of-work (PoW) is the same as Bitcoin: \emph{SHA-256} applied twice. Thus, most of the math analysis we have already done before is just the same.
+
+Let $X$ be the number of trials to solve the PoW and $T$ be the time between blocks. We already know that $X$ follows a geometric distribution with $p = \frac{A}{2^{256}}$, where $A$ is inversely proportional to the difficulty, i.e., the smaller the $A$, the higher the difficulty. We also know that $T$ follows an exponential distribution with $\lambda = \frac{1}{\eta}$, where $\eta$ is the average time between blocks. As proved before, $\eta p H = 1$, thus let's define $w = \log_2(\mathbf{E}(X)) = \log_2(1/p) = \log_2(\eta H) = \log_2(\eta) + \log_2(H)$.
+
+For the blocks, $\eta = 128$, thus, $\mathbf{E}(T) = \eta = 128 \text{ seconds}$, and $\mathbf{V}(T) = \eta^2 = 16,384$, where $T$ is the random variable of the time between two consecutive blocks. The symmetrical confidence interval of $T$ with $\alpha = 10\%$ is $[6.56, 383.45]$, i.e., 90\% of the cases the distance between blocks will be between 6 seconds and just under 7 minutes.
+
+Let $H$ be the hash rate of the miners, then, the weight of the blocks is calculated by
+
+$$w_\text{blocks} = \log_2(128) + \log_2(H) = 7 + \log_2(H)$$
+
+This weight will be updated every 675 blocks (which should happen every 24 hours) to take into consideration the change of $H$. First, $H$ will be estimated using the fact that $\mathbf{E}(Y_{2016}) = \frac{2016}{\lambda} = 2016 \eta = \frac{2016}{pH} = \frac{2016 \cdot 2^w}{H}$. Thus, $H = \frac{2016 \cdot 2^w}{\Delta t} \Rightarrow \log_2(H) = w + \log_2(2016) - \log_2(\Delta t)$, where $\Delta t$ is the time between the latest weight update and now. Finally,
+
+$$w_\text{new} = 7 + w_\text{old} + \log_2(2016) - \log_2(\Delta t)$$
+
+Notice that, if the hash rate has not changed, then $\Delta t = 128 \cdot 2016$ and $w_\text{new} = w_\text{old}$.
+
+
+\subsection{Weight of the transactions}
+
+There is a trade-off which must be considered in the weight of the transactions: the higher the weight, the better to prevent spam, but the worse to microtransactions. So, trying to fulfill both necessities, the weight will be a function of the transaction's size (in bytes) and total amount:
+
+$$w_\text{tx} = \log_2(\text{size}) + \log_2(\text{amount}) + 0.5$$
+
+Although the transaction size depends on the implementation, a typical transaction with 2 inputs and 2 outputs would have approximately 188 bytes. So, for instance, transfering 50,000 tokens would require a weight of 23, which means an average of $2^{23}$ trials to solve the proof-of-work.
+
+
+\subsection{Issuance rate}
+
+Hathor issues tokens every block, thus it is similar to Bitcoin. Even so, an important decision is whether it will issue a limited number of tokens or not. Bitcoin chose to issue a limited number of tokens. On the other hand, Ethereum and others chose to issue an ilimited number of tokens.
+
+Both ways, the number of issued tokens is predictable. This feature itself brings confidence to the community, who will not face monetary intervention (unless they agree to) --- this comes in contrast with fiat money in which the central authority may change the monetary policy to adjust to political demands.
+
+Bitcoin issuance rate started in 50 tokens per block and decreases over time. Every 210,000 blocks---4 years, on average---it halves the number of tokens issued per block. As Bitcoin smallest fraction is $10^{-8}$, after the 33th reduction it will stop issuing new tokens since $2^{33} > 50 \cdot 10^{-8}$. In total, the number of issued tokens will never exceed 21 million. For further information, see \cite{bitcoinsupply}.
+
+%Using the same strategy, Hathor's issuance rate starts in 50,000 tokens per block and decreases over time. Different from Bitcoin, Hathor's tokens are always integers and cannot be split. Every 1,000,000 blocks, the number of tokens issued per block is halved. Thus, the supply is limited to 100 billion issued tokens during its whole life. To calculate the supply limit use the following equation:
+
+%\begin{align*}
+%    \sum_{k=0}^{\infty} 1,000,000 \cdot \left\lfloor \frac{50000}{2^k} \right\rfloor \approx
+%    \sum_{k=0}^{\infty} 1,000,000 \cdot \frac{50000}{2^k} = 100 \text{ billion}
+%\end{align*}
+
+%As the average time between blocks is 128 seconds, it will take around 3 years, 9 months and 20 days between halves.
+
+
+\subsection{Transaction fees}
+
+In Bitcoin, the value of the fee is calculated as the difference between the transaction's outputs and the inputs. For instance, a transaction with inputs summing 8,000 and outputs summing 7,000 is paying 1,000 of fees.
+
+In Hathor, each transaction may pay a fee to the next block which confirms it. But, even if the fee is zero, the miners are forced to confirm at least two pending transactions. These two pending transactions also confirm other transactions which may have no fees. In summary, transactions with no fees cannot be left behind and will always be confirmed by both blocks and other transactions.
+
+One may arguee that it allows the whole network to never pay fees and they are right. In the beginning, miners' incentive is driven by new tokens instead of fees. In the long term, it may be necessary to require a minimum fee to keep the miners working, depending on the chosen issuance policy.
+
+
+\subsection{Transaction validation}
+
+A transaction will be considered valid when it complies with the following rules: (i) it spends only unspent outputs; (ii) the sum of the inputs is greater than or equal to the sum of the outputs; (iii) the number of inputs is at most 256; (iv) the number of outputs is at most 256; (v) it confirms at least two pending transactions; (vi) it solves the proof-of-work with the correct weight.
+
+The transaction has a timestamp field which is used to record when the transaction was generated. This timestamp field must be in UTC time to prevent timezone issues. It must also be within at most 5 minutes from the current time, otherwise the transaction will be discarded.
+
+The digital signature is used to ensure that only the owners may spend their tokens. It will be calculated signing the transaction's input and output only. This allows the transaction to be signed in one device and to be sent to another device that will choose which transaction will be confirmed and will solve the proof-of-work.
+
+Services of solving proof-of-work may also be offered by companies. They give their customers a wallet address and they send the payment inside of the transaction itself. This allows IoT devices to save energy, delegating the task of solving the proof-of-work.
+
+In case of transaction conflict, in which two transactions try to spend the same tokens, the one with higher accumulated weight is chosen and the other is invalidated. Although it is not a possible policy in Iota because of the submarine attack, Hathor does not have the same problem. In Hathor, like in Bitcoin, the submarine attack is only possible if the attacker has a hash rate higher than the whole network, including the miners. In other words, when analysing the double spending attack, Hathor is as safe as Bitcoin.
+
+
+\subsection{Orphan blocks}
+
+Different from Bitcoin, there is no orphan blocks in Hathor. Unless a block confirms either directly or indirectly an invalid transaction, every block is valid. There is no need to leave a block behind since its proof-of-work is increasing transactions' accumulated weight.
+
+If two blocks are trying to collect fees from the same transactions, the one with higher timestamp will be discarded.
+
+
+\subsection{Governance}
+
+In general, cryptocurrencies are decentralized, which means there is no central authority who decides its future, i.e., no one can enforce their will. Every decision must be accepted by its community, which means the community must agree. But what happens if they do not agree? When a consensus is not reached, the rules remain the same and the cryptocurrency may stall. The lack of a central authority may generate long debates, split the community, slow down strategic decision-making, and, ultimately, come to a ``civil war''---it is precisely what happened between Bitcoin Core (BTC) and Bitcoin Cash (BCH) in 2017 \citep{bloomberg2017civilwar, forbes2017civilwar}.
+
+Governance is an important part of a cryptocurrency because it must evolve, which means its community must agree into changing the rules. Governance is an agreement of how the community will proceed to change the rules.
+
+Despite the large literature available about governance, what separates Blockchain-based cryptocurrencies from them is the decentralization (against the hierarchical model). The number of papers about governance in decentralized cryptocurrencies has been growing, but it still lacks a solution. \citet{hacker2017corporate} resorts to the theory of complex systems and proposes a governance framework for decentralized cryptocurrencies, which is, in summary, a centralized coordination entity. \citet{hsieh2017internal} has analyzed the effects of governance in returns using panel data on several cryptocurrencies. They present a deeper discussion about the parts of a governance mechanism and concludes that
+
+\begin{quote}
+``... on the one hand, investors value cryptocurrencies’ core value proposition, rooted in decentralization; but on the other hand, are suspicious of decentralized governance at higher levels in the organization because they could slow down strategic decision-making (e.g., regarding the introduction of new innovations) or create information asymmetries between investors and technologists.''
+\end{quote}
+
+I believe that the solution to a good governance will come from financial incentives to all players to find a common ground. In Bitcoin, users have less bargaining power than miners because they do not contribute with work, whereas, in Hathor, both miners and users are working together. So, when it comes to changing the rules, the bargaining power is more distributed than in Bitcoin. The distribution depends on the ratio of the miners' hashpower and the users' hashpower. The higher the ratio, the closer to Bitcoin's governance. The lower the ratio, the higher the bargaining power of the users.
+
+%- Punishment for miners/transactions which does not comply with the rules.
+%- Rule change policy.
+
+\subsection{Expected number of tips}
+
+It is intuitive that the number of tips depends on the number of transactions per second. The higher the number of transactions per second, the higher the number of tips. We can model the number of tips at time $t$ as a stochastic process, which means it changes over time following some probability distribution. Stochastic processes have two important states: transient and steady. A process is in transient state when its properties are changing over time, whereas it is in steady state when its properties has already converged.
+
+Let's assume that the number of transactions per second is constant and does not change over time. Thus, at the beginning, there will be no tips, and the number will increase until it converges to its stable quantity. The process is in transient state until it reaches stability. Then, it is in the steady state. Notice that the number of tips also change in steady state, but its average does not. It just floats around the average.
+
+If the number of transactions per second increases, the process returns to the transient state and moves towards the new steady state. In practice, the number of transactions per second is always changing, so is the steady state.
+
+\citet{tangle2016} has modeled the stochatic process of the total number of tips. It proves that the average number of tips, in the steady state, is:
+
+$$\frac{\lambda_\text{TX} \cdot 2^{w_\text{TX}}}{\log(2)H}$$
+
+A simple idea to get to this equation is through flow analysis: In steady state, we may say that the number of new tips must equal the number of tips being confirmed in a given time window. Thus, in order to estimate the number of tips in the steady state, let's consider the process in which the rate of inward tips is $\lambda_\text{TX}$, whereas the rate of outward tips is $\rho$.
+
+Let $K$ be the number of tips at a given time. Thus, after $\Delta t$ seconds, $\Delta \text{tips} = \lambda_\text{TX} \Delta t - \rho K \Delta t$. In the steady state, $\Delta \text{tips} = 0$, hence $K = \frac{\lambda_\text{TX}}{\rho}$.
+
+The rate of outward tips is proportional to the rate in which devices solve the proof-of-work of transactions. Let $H$ be the devices' hash rate, then, $\rho = \alpha \cdot H \cdot 2^{-w_\text{TX}}$, where $\alpha$ is the coefficient of proportionality.
+
+Finally,
+
+$$K = \frac{\lambda_\text{TX}}{\alpha} \frac{2^{w_\text{TX}}}{H}$$
+
+If new transactions would always confirm two tips, then $\alpha$ would equal 2. But, it may confirm one or even zero tips because concurrent new transactions may confirm their tips first. Thus, $0 < \alpha \le 2$. According to the equation found in \citet{tangle2016}, $\alpha = \log(2) = 0.693147$.
+
+%$$\frac{\lambda_\text{TX} \cdot 2^{w_\text{TX}}}{2H} \le K \le \frac{\lambda_\text{TX} \cdot 2^{w_\text{TX}}}{H}$$
+
+%\subsection{Attacks \& Conflicting transactions}
+%\subsection{Scripts \& Contracts}
+%\subsection{Bandwidth consumption}

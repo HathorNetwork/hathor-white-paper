@@ -1,0 +1,296 @@
+% !TEX root = ../white-paper.tex
+
+
+% TODO Include mining-pool proof of hashpower statistics.
+
+% TODO Lightning network, é uma solução de scaling? Parece que não.
+
+% TODO Governance (!!!)
+% TODO Rule change policy (maybe PoS)
+% TODO Miner/transaction punishment
+% TODO Different hash function for miners and transactions (!!!)
+%      Scrypt and SHA-256?
+
+\section{Introduction}
+
+
+\bigskip
+
+\begin{flushright}{\slshape
+    {We are watching History being made.\\
+    Or History being repeated.}
+	\\ \medskip
+    --- David Collum, Cornell University, 2013}
+\end{flushright}
+\bigskip
+\bigskip
+
+The primary problem for creating digital money is how to prevent double spending. As the money is digital, and copies can be made \textit{ad nauseam}, what can prevent counterfeiting? What would prevent users from sending copies of the same money to two (or more) people? That is precisely the problem solved by Bitcoin and its underlying Blockchain technology. The current solution behind fiat money is having a single issuer, a central bank --- then trusting the financial institutions and regulators.
+
+The concept of transferring money using cryptography as an underlying technology was shortly presented in 1983 by \citet{chaum1983blind} and was deepened in a theoretical paper in 1985 \citep{chaum1985security}. However, it was only in 1988 that \citet{chaum1988untraceable} created the term \emph{electronic cash} and also proposed a basic and practical scheme which yielded untraceability yet allowed to trace double spendings.
+
+According to \citet{barber2012bitter}, despite the 30-year literature on e-cash, most of the proposed schemes requires a central authority which controls the currency issuance and prevents double spending \citep{chaum1983blind, okamoto1995efficient, camenisch2005compact, canard2007divisible}. Some papers even propose solutions in a similar trajectory to Bitcoin, such as hash chain \citep{zongkai2004new} and preventing double spending using peer-to-peer networks \citep{osipkov2007combating, hoepman2007distributed}. The no central point of trust and predictable money supply together with a clever solution to the double-spending problem is what separates Bitcoin from the previous e-cash philosophies.
+
+Bitcoin (BTC) is a digital currency, also known as digital money, internet money, and cryptocurrency. It is the first currency based on cryptography techniques which are distributed, decentralized, and with no central bank.
+
+Bitcoin is a computer network in which nodes act like clerks performing clearing. A transaction clearing consists of ensuring that the transaction is settled according to the rules. In order to do that, every node stores a copy of Bitcoin's ledger, which records both all transactions and users' balance. When new transactions are added to the ledger, the balances are updated. It is said that Bitcoin is distributed because its ledger is public and is stored in thousands of computers. Even though the ledger is public, balances are anonymous, and no one knows who owns which funds\footnote{There are some techniques which may de-anonymize transactions in specific situations, even when users are using Tor network. For further information, see \citet{shentu2015research, biryukov2014deanonymisation, jawaheri2018small}.}. If an attacker tries to change anything, the remaining of the network is able to detect it and ignore the change.
+
+Bitcoin is considered decentralized because there is no authority (or government) who decides its future. Every decision must be accepted by its community, and no one can enforce their will. Every change proposal must be submitted to the community who will discuss the matter and come to a verdict. If the majority of Bitcoin's community agrees on a decision, they just have to update their clearing process accordingly, and the changes are applied.
+
+The security of Bitcoin relies on digital signature technology and network agreement. While digital signature ensures ownership, i.e., the funds may only be spent by their owners, and nobody else; the network agreement both prevents double spending and ensures that all processed transactions have sufficient funds. In short, every transaction must spend only unspent funds, must have enough funds available, and must be signed by its owners, authorizing its execution. Only when all these requirements are met, the funds are transferred.
+
+% TODO After the year of 2140, there will be only fees to be collected.
+Bitcoin provides interesting incentives to all players (users and miners). On the one hand, users may have incentives to use Bitcoin because (i) the fees are small and do not depend on the amount being transferred --- but only in the size (in bytes) of the transaction ---; (ii) the transfers will be confirmed in a well-known period; (iii) it is not possible to revert an already confirmed transfer, not even with a judicial order; and (iv) and the currency issuance rate is well-known and preset in Bitcoin's rules, which makes Bitcoin's supply predictable and trustworthy, different from fiat currencies which depends on decisions of their central banks --- i.e., it would be virtually impossible to face a hyper inflation in Bitcoin due to currency issuance. On the other hand, miners have incentive to mine Bitcoin because new Bitcoins are found every ten minutes, and they may also collect the fees of unconfirmed transactions. It is important to highlight that anyone can become a miner, and there is no entry cost besides the mining equipment. These incentives have kept the Bitcoin network up and running since 2009 with barely any interruptions (99.99\% uptime). For further information about incentives, see \citet{ma2018market, catalini2016some}.
+
+Since 2009, Bitcoin has been growing and becoming more and more used all around the world. It started as an experiment based on a seminal work by \citet{nakamoto2008bitcoin} and expanded to the most important and successful cryptocurrency with a highly volatile \$192 billion market capitalization, as of this writing \citep{coinmarketcapbtc}. There are hundreds of companies investing in different uses of the technology, from exchanges to debit cards, and billions of dollars being invested in the new markets based on Bitcoin's technology.
+
+Despite Bitcoin's huge success, there are still many challenges to be overcome. We will focus on the following challenges: scaling, spamming, and centralization. One important challenge that we will skip is to reduce the size of the ledger (or blockchain), which today is around 125GB and is growing at a rate of 4.5GB per month \citep{blockchaininfosize}.
+
+The network must scale to support hundreds of transactions per second, while its capacity is around only eight transactions per second. Thus, the more Bitcoin becomes popular, the more saturated the network is. Network saturation has many side effects and may affect the players' incentive to keep the network running. The transaction fees have to be increased to compete for faster confirmation. The pool of unconfirmed transactions grows indefinitely, which may cause some transactions to be discarded due to low memory space available, as the previously predictable confirmation time of transactions becomes unpredictable.
+
+The scaling problem is not precisely an issue of Bitcoin, but an issue of the Blockchain technology. Hence, all other Blockchain-based cryptocurrencies have the same limitations, such as Litecoin, Bitcoin Cash, and Ethereum. One may argue that increasing the maximum block size is a feasible solution to scaling, but I would say that it is just a temporary solution which buys some time until the next network saturation.
+
+Bitcoin seems to have the most decentralized network among the cryptocurrencies, even so, there are few miners and mining pools which together control over 50\% of the network’s computing (hash)power (for details, see \citet{gencer2018decentralization}). Hence, they have an oversized influence when it comes to changes in the Bitcoin protocol's behavior. They may also cooperate in an attack, voiding transactions which seemed confirmed. The more decentralized, the more trustworthy Bitcoin is. This centralization problem is seen as an important challenge.
+
+Generating new transactions in Bitcoin has a tiny computational cost because one only has to generate the transaction itself, digitally sign it, and propagate it in the Bitcoin network. On the one hand, it means that any device is capable of generating new transactions, but, on the other hand, it makes Bitcoin susceptible to spam attacks. One may generate hundreds of thousands of new valid transactions, overloading the unconfirmed transactions pool and saturating the network. This spam problem has happened several times and affects Bitcoin's trustworthy. \citet{bitcoinspam2017} reports a possible spam attack lasting at least contiguous 18 months.
+
+The number of ideas and publications focusing on improving Bitcoin's design and overcoming those challenges is increasing every day. Many of these proposals are organized into BIPs (Bitcoin Improvement Proposals) which are discussed and implemented by the community; while others come in the form of whitepapers and alternative software forks (which would include the need of a protocol upgrade). Other proposals are published in blogs and forums, describing new cryptocurrencies. Bitcoin's community hardly ever publishes their ideas in academic journals, preferring instead, of BIPs, white papers, and web discussions.
+
+After the launch of Bitcoin, more than 1,000 other cryptocurrencies have been created \citep{coinmarketcap}. In general, they are Bitcoin-like, which means they use similar technologies, including the blockchain. Some cryptocurrencies differs a lot from Bitcoin, like the ones which use the Directed Acyclic Graph (DAG) model \citep{dagdiscussion2014, tangle2016, dagcoin2015, sompolinsky2013, lewenberg2015, vorick2015}. We are especially interested in one of them: Iota.
+
+Iota uses a DAG model, called tangle, which has a different design than Bitcoin's blockchain. It has neither mining nor confirmation blocks and transaction fees. Each transaction has its own proof-of-work\footnote{The mechanism that assures the immutability is the proof-of-work, which makes it computationally infeasible to tamper with transactions. It will be explained later in details.} and is used to confirm other transactions, forming a directed acyclic graph of transactions. Thus, a transaction is said to be confirmed when there is enough proof-of-work from the transactions confirming it directly or indirectly. There is no other way to confirm transactions but generating new transactions.
+
+In Iota, as transactions confirm transactions, the network benefits from a high volume of new transactions. Therefore, theoretically, it scales to any large number of transactions per second. The scaling problem of tangle is exactly the opposite of Bitcoin's: it must have at least a given number of transaction per seconds; otherwise, the transactions are not confirmed, and the cryptocurrency does not work. While Iota's network has not reached this minimum number of transactions per second, it uses a central coordinator which works as a trustworthy node \citep{iotacoordinator}.
+
+Every transaction confirmed by the central coordinator is assumed to be valid and cannot be reverted. The remaining of the network can verify a confirmation through the central coordinator's digital signature. The coordinator will not be necessary anymore when the number of transactions per second reaches a minimum value, but Iota's developers cannot say precisely what is this minimum value. This just elucidates that the tangle does not seem to work properly under a low volume of transactions (and fluctuations in the number of transactions per second may severely affect Iota's trustworthiness).
+
+The present work intends to propose and analyze a new architecture, named Hathor, which lies between Bitcoin and Iota and may be a viable solution to both scaling, centralization, and spam problems.
+
+
+
+
+\section{Hathor's architecture}
+\input{./Chapters/hathor-architecture.tex}
+
+
+\section{Methodology}
+
+The methodology we have used is computer simulation. Through the simulation of many scenarios of Hathor, we will understand how the network behaves in complex scenarios, including when the load suddenly increases, and when the network is under attack.
+
+The simulator has been developed using an event-based design which is capable of running hours of simulation in just a few minutes. It creates agents who decide to make a transaction, then they select which transactions will be confirmed, next they spend some time working in the proof-of-work, and, finally, they propagate the transaction to the network. The other agents receive the transaction and may accept or deny it. The agents may use different parameters among themselves.
+
+When a new transaction emerges, it chooses two tips to confirm before solving the proof-of-work. When it finishes solving the proof-of-work, the transaction is propagated and becomes a tip. So, two new transactions may choose the same tips to confirm. If there are $t$ tips, a new transaction will randomly choose 2 out of these $t$ tips, even if they have already been chosen by other new transactions --- in fact, they do not know which have been chosen because these new transactions have not been propagated yet.
+
+When a new transaction is added to the Hathor's network, it uses a depth-first search \citep{cormen2009introduction} to update the aggregated weight of the directly and indirectly confirmed transactions. The depth-first search is interrupted when it reaches a transaction which the accumulated weight is larger than a given threshold. This interruption significantly increases the overall performance of the simulation. If the accumulated weight of the whole DAG is an important metric, the whole DAG may be updated in specific times to get a measurement (instead of every new transaction).
+
+%, (ii) to calculate its own score, and (iii) to generate a topological sort \citep{cormen2009introduction}. The topological sort is used to calculate the longest path from all other transactions to the new transaction, and this longest path is used to update the depth of the whole DAG. If the new transaction confirms only transactions which has already been confirmed, the depth update is skipped thanks to Theorem \ref{theorem-new-tx-not-tip}.
+
+Simulator's random variables are all sampled from their distributions. The time between two transactions is sampled from an exponential distribution with $\lambda_\text{TX}$. The number of attempts to find a solution of the proof-of-work is sampled from a geometric distribution with $p=2^{w}$, where $w$ can be either $w_\text{TX}$ or $w_\text{block}$. The amount of time spent to solve the proof-of-work is calculated dividing the number of attempts by the hash rate of the device (which could be either a miner or an user). The time between blocks is just the amount of time spent to solve the proof-of-work with $w_\text{block}$.
+
+Transactions (and blocks) do not have inputs, outputs, and scripts. They have only pointers to other transactions, which form the DAG. They also store their weight, accumulated weight, timestamp, and some statistics used for reports.
+
+New miners or users may be added or removed any time during a simulation. This allows the simulation of many different scenarios, such as increasing the number of miners, a sudden increase in the number of transactions per second, a sudden decrease in the number of miners, and so forth.
+
+It is also possible to create metrics, which sample a statistic every $\Delta t$ seconds. There are two metrics available: (i) TipsMetric, which stores the number of tips at a given simulation time, and (ii) UtterlyAcceptanceMetric, which finds the new utterly accepted transactions and store how long it took.
+
+To find the network validated transactions, I run a breadth-first search (bfs) for each tip. Transactions visited in all searches are being confirmed by all tips and, by definition, are network validated transactions.
+
+%The simulator will output different reports: (i) snapshots of the DAG at interesting moments, such as Fig. \ref{fig-tangle-example}, \ref{fig-tangle-swarm}, and \ref{fig-tangle-conflict}; (ii) histogram of confirmation time, such as Fig. \ref{fig-tangle-hist} and \ref{fig-tangle-hist-2}; and many others.
+
+
+\section{Analysis of Hathor}
+
+% TODO Include the parameters of the simulations.
+
+Hathor's architecture lies between Iota and Bitcoin's architectures. It is similar to Bitcoin's architecture when the number of transactions per second is low, while it is similar to Iota's architecture when the number of transactions per second is high. There is no ``switching'' between Bitcoin and Iota. It just behaves like one or another according to the network. In order to check this statement, I have performed some simulations.
+
+First, two simulations in the extreme cases: (i) no transactions, (ii) no miners. The first should have precisely the same behavior as Bitcoin's blocks with one block after the other forming a long chain. The latter should have a similar behavior as Iota's, forming a Direct Acyclic Graph (DAG) with new transactions confirming previous ones. We can see in Figure \ref{fig:hathor-similarities} that both cases seem to be correct.
+
+Next, I have run a more realistic simulation, with both miners and transactions. As we can see in Figure \ref{fig:hathor-dag}, Hathor's structure is a mix of Iota and Bitcoin's structure. The transactions are forming a DAG while, in parallel, the blocks are forming a chain inside the DAG.
+
+\begin{figure}[!htb]
+\centering
+\subfloat[No miners]{\includegraphics[width=0.5\textwidth]{./images01/sim/no_miners.pdf}}
+\subfloat[No transactions]{\includegraphics[width=0.5\textwidth]{./images01/sim/only_miners.pdf}}
+\caption{Visualization of a Hathor's graph in two particular cases: (a) no miners, (b) no transactions. It shows that when there are no miners, Hathor is similar to Iota (same structure, but different parameters), and when there is no transactions, it is similar to Bitcoin.\label{fig:hathor-similarities}}
+\end{figure}
+
+\begin{figure}[!htb]
+\centering\includegraphics[width=\textwidth]{./images01/sim/hathor.pdf}
+\caption{Visualization of a Hathor's graph with transactions and blocks. Red boxes are blocks, and white circles are simple transactions. The arrows show the confirmations.\label{fig:hathor-dag}}
+\end{figure}
+
+
+\section{Confirmation time}
+
+Another evidence that Hathor lies between Iota and Bitcoin is found when comparing the time to confirm a transaction. In this context, a transaction is said to be confirmed when it has reached an accumulated weight similar to six times the hash rate of the whole network (miners and new transactions). This criteria is equivalent to the well-known ``6 confirmations'' of Bitcoin, which is adopted by almost the whole ecosystem.
+
+Thus, I have run a simulation in which miners are majority and there are few transactions. In Figure \ref{fig:hathor-tct-low-mid}, we may see a good fit between the confirmation time of a transaction and the theoretical distribution of the time to find six blocks in Bitcoin (which is $Y_6$ and follows an Erlang distribution). The blocks create ``maximum confirmation time'', since they are found with a precise pace, i.e., when there is not enough new transactions coming, the confirmation is done by the blocks. But, when the load is increased, Hathor's confirmation time is reduced and diverges from Bitcoin's time distribution. The reasoning is that confirmations coming from other transactions start to play an important role and accelerates the speed of confirmations, i.e., there is no need to wait for the next blocks, because the transactions are confirming themselves. This is what allows Hathor to scale and support higher volumes, indeed.
+
+\begin{figure}[!htb]
+\centering
+\subfloat[Low load]{\includegraphics[width=0.5\textwidth]{./images01/sim/tct-low-load.png}}
+\subfloat[Mid load \label{fig:hathor-tct-mid-load}]{\includegraphics[width=0.5\textwidth]{./images01/sim/tct-mid-load.png}}
+
+\caption{Confirmation time in two scenarios: (a) low load, (b) mid load. The red curve is the distribuion of the time to find six blocks in Bitcoin (which follows an Erlang distribution). As we can notice, in the low load scenario, Hathor's confirmation time behaves just like Bitcoin's. When the load is increased, it starts to diverge from Bitcoin's distribution. \label{fig:hathor-tct-low-mid}}
+\end{figure}
+
+We may see Hathor's confirmation time moving from Bitcoin's to Iota's in Figure \ref{fig:hathor-tct-many}. Notice that the confirmation timer is getting smaller as the number of transactions per second increases. Figure \ref{fig:hathor-tct-many-right} is a zoom-in in the right side, and we can see again the good fit between Hathor Bitcoin's confirmation time under low load.
+
+\begin{figure}[!htb]
+\centering
+\subfloat[The whole picture]{\includegraphics[width=\textwidth]{./images01/sim/tct-many-loads-2.png}}
+
+\subfloat[Zoom in the left part of the above chart]{\includegraphics[width=0.5\textwidth]{./images01/sim/tct-many-loads-3.png}}
+\subfloat[Zoom in the right part of the above chart \label{fig:hathor-tct-many-right}]{\includegraphics[width=0.5\textwidth]{./images01/sim/tct-many-loads-4.png}}
+
+\caption{Confirmation time in many scenarios, moving from a low load ($\lambda_\text{TX} = 0.015625$) to a high load ($\lambda_\text{TX} = 2$). \label{fig:hathor-tct-many}}
+\end{figure}
+
+But, what would happen if, instead of changing the number of transactions per second, we change the relative hash power between miners and transactions? In previous simulations, the miners had a hash rate in the same magnitude as the transactions. In Figure \ref{fig:hathor-tct-100k-10k}, we can see the same simulation as in Figure \ref{fig:hathor-tct-mid-load}, but with the miners' hash rate ten times the transactions'. Besides the difference in the shape of the distribution, we can see that it is moving back towards Bitcoin's confirmation time distribution. It also makes sense because increasing the miners' hash rate increases the required minimum accumulated weighted for confirmed transactions. Therefore, more transactions are necessary to give more accumulated weight. As the number of transactions per second was not changed, most of the work of confirmations were done by blocks (and not by transactions). To confirm this idea, I kept the miners' hash rate ten times the transactions' and increased 16 times the number of transactions per second. As we can see in Figure \ref{fig:hathor-tct-100k-10k-high}, when the number of transactions per second is increased, its role in the accumulated weight also increases and it goes farther from Bitcoin's distribution.
+
+\begin{figure}[!htb]
+\centering
+\subfloat[Same load as in Figure \ref{fig:hathor-tct-mid-load}]{\includegraphics[width=0.5\textwidth]{./images01/sim/tct-100k-10k.png}}
+\subfloat[High load, 16 times of (a)\label{fig:hathor-tct-100k-10k-high}]{\includegraphics[width=0.5\textwidth]{./images01/sim/tct-100k-10k-high-load.png}}
+
+\caption{Confirmation time with miners' hash rate ten times the transactions'. \label{fig:hathor-tct-100k-10k}}
+\end{figure}
+
+Finally, even with both blocks and transactions, Hathor's blocks are similar to Bitcoin's blocks, and they share the same math. To confirm that, see Figure \ref{fig:hathor-tbb}, where the red curve is Bitcoin's distribution of time between blocks and the blue histogram is Hathor's time between blocks. I also made several tests adding and removing miners to check the difficulty adjustment and it worked properly.
+
+\begin{figure}[!htb]
+\centering
+\subfloat[1 miner]{\includegraphics[width=0.5\textwidth]{./images01/sim/tbb-1.png}}
+\subfloat[2 miners after difficulty adjustment]{\includegraphics[width=0.5\textwidth]{./images01/sim/tbb-2-after.png}}
+
+\caption{Histogram of time between blocks. The red curve the Bitcoin's theoretical distribution of time between blocks. As we can notice, the fit is very good. \label{fig:hathor-tbb}}
+\end{figure}
+
+\clearpage
+
+\begin{figure}[!htb]
+\centering\includegraphics[height=0.88\textheight]{./images01/sim/hathor-2.pdf}
+\caption{Visualization of a Hathor's graph with transactions and blocks. Red boxes are blocks; green circles are confirmed transactions; white circles are in-progress transactions; yellow circles are unconfirmed transactions (tips); and grey circles are transactions solving the proof-of-work which have not been propagated yet. The arrows show the confirmation chain. Block's arrows are in bold. \label{fig:hathor-dag-big}}
+\end{figure}
+
+\clearpage
+
+
+\section{Visualizing the network}
+
+Visualizing the network is not simple because the number of transactions and blocks is high, thus, arranging them and their edges is a non-trivial task. Therefore, most of the visualization are just part of the DAG which shows a window of time.
+
+To a better visualization of a Hathor's network, I run a simulation classifying the transactions in either confirmed, in-progress, or unconfirmed (tips). I also showed the transactions solving the proof-of-work which had not been propagated yet. See Figure \ref{fig:hathor-dag-big} and notice the chain of blocks inside the DAG. Confirmed transactions are in green circles, while in-progress transactions are in white circles and tips are in yellow circles. The blocks are in red boxes form a chain inside the DAG. Finally, the new transactions which are solving the proof-of-work and had not been propagated are in grey dashed circles.
+
+As new transactions have to chose two previous transactions to confirm, and just after they start to work in the proof-of-work, two new transactions eventually may chose the same tip because they do not know each other yet. So, if new transactions are coming in a low pace, the width of the swarm is small because the number of new transactions simultaneously solving the proof-of-work is also small. But, when new transactions are coming in a high volume, the width of the swarm increases because new transactions are choosing the same tip over and over.
+
+In summary, the width of the swarm depends on the number of transactions per second. The greater the number of new transactions per second, the larger the width of the swarm.
+
+To visualize the change in the width of the swarm, I run a simulation with a constant number of transactions per second, which was increased only in a specific window of time. The result can be seen in Figure \ref{fig:hathor-load-changing}, where the number of transactions per second suddenly increases, and the width increases until it reaches a stable value. Then, the number of transactions per second decreases, and the width returns to the previous value.
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=\textwidth]{./images01/new/many-loadings.pdf}
+
+\caption{DAG visualization when the loading is changed over time. \label{fig:hathor-load-changing}}
+\end{figure}
+
+
+
+
+
+
+\section{Number of tips}
+
+The number of tips at a given time also depends on the number of new transactions per second. The relationship between them was empirically measured in several simulations with different $\lambda_\text{TX}$.
+
+Analyzing Figure \ref{fig:hathor-tips}, it is easy to notice that both the average and the standard deviation of the number of tips increase when $\lambda_\text{TX}$ increases. According to \citet{tangle2016}, the average has the following equation:
+
+$$\frac{\lambda_\text{TX}}{\log(2)} \frac{2^{w_\text{TX}}}{H}$$
+
+In our simulation, $H = 100,000$ and $w_\text{TX} = 17$, so, the average number of tips should be equal to $1.89 \cdot \lambda_\text{TX}$. This model works best for low values of $\lambda_\text{TX}$ and diverges a little for higher values. For instance, if $\lambda_\text{TX} = 32$ tx/s, this equation predicts $60.48$ tips on average yet we can check in the empirical result that the average is around $55$ tips.
+
+When $\lambda_\text{TX} \rightarrow 0$, the number of tips goes towards one. The explanation is that there will be only one new transaction solving the proof-of-work per turn. So, new transactions will always confirm two tips, reducing the number of tips by one---each transaction confirms two tips and create one new one, hence the balance is -1. As it is impossible to have less than one tip, it converges to one.
+
+When there is only one tip, new transactions must chose this only tip and another in-progress transaction. It should only happen in very low load scenarios, like during the launch of the network itself.
+
+\begin{figure}[!htb]
+\centering
+\subfloat[All load scenarios]{\includegraphics[height=0.44\textheight]{./images01/new2/tips_aggregate.png}}
+
+\subfloat[Zoom in the left side of (a)]{\includegraphics[height=0.44\textheight]{./images01/new2/tips_aggregate2.png}}
+
+\caption{Histogram of the number of tips for different load scenarios. As expected, the number of tips increases with $\lambda_\text{TX}$. \label{fig:hathor-tips}}
+\end{figure}
+
+
+\section{Network validated transactions}
+
+When all tips are confirming a transaction directly or indirectly, it is said that the transaction is network validated. It means that the whole network has checked the transactions and agrees that it is valid.
+
+When a transaction is network validated, all new transactions and blocks will confirm that transaction. Thus, its aggregated weight will increase as fast as possible.
+
+Let $\lambda_\text{TX}$ be the number of new transactions per second. If $\lambda_\text{TX}$ is constant, it means that, on average, there will be $\lambda_\text{TX} \Delta t$ new transactions after $\Delta t$ seconds (because the number of new transactions after $\Delta t$ seconds follows a Poisson distribution). All these transactions will confirm the network validated transactions. Hence, the number of transactions confirming a network validated transactions grows linearly. This result was also predicted by \citet[p.14]{tangle2016}.
+
+Suppose a transaction has just become network validated. Let $\text{acc}_0$ be its accumulated weight when it became network validated, $\eta$ be the average time between blocks, $w_\text{TX}$ be the average transaction weight, and $w_\text{BLK}$ be the average block weight. Then,
+
+\begin{align*}
+\text{acc}(\Delta t)
+&= \log_2 \left(2^{\text{acc}_0} + \lambda_\text{TX} \Delta t \cdot 2^{w_\text{TX}} + \left\lfloor \frac{\Delta t}{\eta} \right\rfloor 2^{w_\text{BLK}} \right) \\
+&= \text{acc}_0 + \log_2 \left(1 + \lambda_\text{TX} \Delta t \cdot 2^{w_\text{TX} - \text{acc}_0} + \left\lfloor \frac{\Delta t}{\eta} \right\rfloor 2^{w_\text{BLK} - \text{acc}_0} \right) \\
+&\simeq \text{acc}_0 + \log_2 \left(1 + \lambda_\text{TX} \Delta t \cdot 2^{w_\text{TX} - \text{acc}_0} + \frac{\Delta t}{\eta} 2^{w_\text{BLK} - \text{acc}_0} \right) \\
+&= \text{acc}_0 + \log_2 \left(1 + \lambda_\text{TX} \Delta t \cdot 2^{w_\text{TX} - \text{acc}_0} + \Delta t \cdot \eta^{-1} 2^{w_\text{BLK} - \text{acc}_0} \right) \\
+&= \text{acc}_0 + \log_2 \left[1 + \Delta t \cdot 2^{-\text{acc}_0} \cdot ( \lambda_\text{TX} 2^{w_\text{TX}} + \eta^{-1} 2^{w_\text{BLK}} ) \right]
+\end{align*}
+
+Therefore, after being network validated, the accumulated weight of a transaction grows logarithmically.
+
+In Figure \ref{fig:hathor-network-validated}, we can see how long it takes for a transaction to be network validated in different scenarios. The time is quite the same for $\lambda_\text{TX}$ less than one, but it changes for higher values.
+
+It is interesting to notice that there is a trade-off when $\lambda_\text{TX}$ increases. On the one hand, new transactions grow the DAG and accelerate the network validation, whereas, on the other hand, both the number of tips and the width of the swarm increases, dispersing this acceleration. The results show that, in fact, the time to be network validated increases with $\lambda_\text{TX}$.
+
+Anyway, for up to 32 tx/s (and $\eta=128$), it is reasonable to state that most transactions will be network validated after 35 seconds.
+
+\begin{figure}[!htb]
+\centering
+\subfloat[All load scenarios]{\includegraphics[height=0.43\textheight]{./images01/new2/nv_all.png}}
+
+\subfloat[Only low load scenarios]{\includegraphics[height=0.43\textheight]{./images01/new2/nv_low.png}}
+
+\caption{Histogram of the time it takes for a transaction to be network validated. A transaction is said to be network validated when all tips are confirming it directly or indirectly. \label{fig:hathor-network-validated}}
+\end{figure}
+
+
+%The number of transactions solving the proof-of-work may be modeled by a Birth and Death process, since if we have $k$ transactions solving the proof-of-work only two things may happen: either a new transaction will be created or one the transactions will finish solving the proof-of-work. Let the time between new transactions follows an exponential distribution with $\mu$ parameter, then the probability of a new transaction emerges before any transaction finishes its proof-of-work is $q_k = \mathbf{P}(T_{\text{new tx}} = \min\{T_{\text{new tx}}, T_1, T_2, \dots, T_k\}) = \frac{\mu}{\mu + \sum_{i=1}^k \lambda_i}$. Hence, the probability of any transaction finishes its proof-of-work before a new transaction emerges is $p_k = 1 - q_k = \frac{\sum_{i=1}^k \lambda_i}{\mu + \sum_{i=1}^k \lambda_i}$.
+
+%\begin{theorem}
+%\label{theorem-new-tx-not-tip}
+%When a new transaction confirms an already confirmed transaction, the depth of all transactions remains the same, i.e., the depth of the transactions are only changed when a new transaction confirm an unconfirmed transaction.
+%\end{theorem}
+
+%\begin{theorem}
+%The height of a transaction is equal to the maximum height of its parents plus one.
+%\end{theorem}
+
+%\begin{theorem}
+%If new transactions choose randomly the unconfirmed transactions to be confirmed, then no unconfirmed transaction will be left behind, i.e., all transactions will be confirmed in due time.
+%\end{theorem}
+
+\section{Conclusion}
+
+Bitcoin's underlying technology, blockchain, has been called by many as a major invention, even comparable to the invention of the internet. But it is unlikely that Bitcoin and blockchain have achieved the final or most optimal design for a secure and scalable electronic transaction system. In this work, I proposed and analysed a new architecture named Hathor, which seems a scalable alternative to Bitcoin.
+
+Today, Bitcoin network can barely handle 8 transactions per second without increasing the unconfirmed transaction list to hundreds of thousands --- several transactions take days to be confirmed. In order to increase Bitcoin's capacity, its community has first proposed and implemented segregated witness, which improved scalability yet was not enough. Finally, they proposed the lightning network, which is in development and should be available in the next months. I believe these proposals relieve the network---a temporary solution---, but do not solve the scalability problem.
+
+Hathor's architecture allows a great number of transactions per second, since new transactions confirm previous ones (and there is no such thing as ``maximum block size''). The more transactions are coming, the faster previous transactions will be confirmed. It is the opposite of Bitcoin because the network benefits from high volume scenarios. As I have shown, Hathor seems to solve the scalability problem present in Blockchain-based cryptocurrencies.
+
+As the transactions also have a proof-of-work, it becomes harder to perform a spam attack. The attacker would spend a considerable amount of computational resources to solve the proof-of-work of every transaction, and the amount of work depends on the transaction's weight parameter. Future work may explore automatic adjustments in transaction's weight to improve spam prevention. For instance, the network can detect a higher number of new transactions coming and increase the transaction's weight for a while. Or else, the transaction's weight may be a function of the time between an output being spent and its spending transaction, so, transferring the same tokens over and over in a small window of time would require more work. Anyway, the transaction's weight seems to tackle the spam issue. The new challenge is to set a proper transaction's weight which would prevent spam without impairing IoT devices.
+
+The last, but not least, challenge is the hashpower centralization. Although Bitcoin seems to have the most decentralized network among cryptocurrencies, there are few miners and mining pools which \emph{together} control over 50\% of the network’s computing (hash)power \citep{gencer2018decentralization}. Hence, they have an oversized influence when it comes to changes in the Bitcoin protocol's behavior. Hathor's architecture splits the hashpower among miners and users. Even if miners have more individual hashpower than users, because they would have rigs with appropriate cooling and energy supply, I believe their aggregate hashpower will not surpass users' aggregate hashpower when millions of devices are generating transactions. Future IoT devices may even come with an application-specific integrated circuit (asic) designed to solve Hathor's proof-of-work without spending too much battery. Future work may check common IoT processors' hashpower, which would allows us to estimate how many devices would be necessary to surpass miners' hashpower.
+
+Even though I have proposed to update block's weight every 24 hours (or 675 blocks), this was an arbitrary number. Future work may explore whether it would be feasible to continuously update block's weight, or what would be the optimal number of blocks between each update. I believe that the challenge of a continuous update approach would be preventing outdated nodes to discard valid blocks when two or more blocks were being propagated through Hathor's network. Maybe a solution would be allowing a range of block's weight instead of a single value, but future work would have to check whether this can be exploited by attackers.
+
+I also presented a mathematical analysis of Blockchain, going though mining, hashpower change, orphan blocks, and double-spending attacks. Most of the presented results may directly be applied to Hathor's blocks, since their foundations are the same. As \citet{tangle2016} has already analyzed Tangle, I have just applied their results with a few extensions.
+
+Future work may also further analyze other possibilities of attack in Hathor's network, such as malicious device not using random tip selection. Another major challenge affecting all cryptocurrencies is disk space use. How would one wipe out part of the blocks and transactions without putting security in risk? At first, all blocks and transactions are required to check whether anyone (including computer viruses) has tampered with transactions which had already been validated and stored in disk.
